@@ -1,0 +1,51 @@
+.body {
+    height: 100vh;
+    padding-top: 80px;
+    overflow-y: overlay;
+    background: linear-gradient( rgb(91, 87, 115), rgba(0, 0, 0, 1));
+}
+
+.main__container{
+    display: flex;
+    margin-left: 15%;
+    margin-right: 15%;
+    margin-top: 5px;
+}
+
+.video__container{
+    display: flex;
+    border: 2px solid salmon;
+    flex: 0.75;
+    padding: 10px;
+    justify-content: space-between;
+}
+
+.video__container > div {
+    border: 1px solid bisque;
+    flex: 0.4;
+    height: 550px;
+}
+
+.upload{
+    margin-left: 17%;
+}
+
+.video__upload{
+    text-align: center;
+}
+
+.score__contaner{
+    flex: 0.25;
+    /* border: 2px solid purple; */
+}
+
+.score__contaner > div{
+    height: 60%;
+    width: 80%;
+    background-color: white;
+    text-align: center;
+    margin-left: 30px;
+    margin-top: 10%;
+    border-radius: 20px;
+    box-shadow: 5px 5px 10px rgb(91, 87, 115); 
+}
