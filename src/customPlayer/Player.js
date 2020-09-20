@@ -16,9 +16,9 @@ import {
   Fullscreen, 
   Pause, 
   PlayArrow, 
+  VolumeOff, 
   VolumeUp 
 } from '@material-ui/icons';
-
 
 const useStyles = makeStyles({
     playerWrapper: {
@@ -102,7 +102,20 @@ const useStyles = makeStyles({
   })(Slider);
   
 
-export default function Player() {
+export default function Player({ 
+    onPlayPause, 
+    playing, 
+    onRewind, 
+    onFastForward,
+    muted, 
+    onMute,
+    onVolumeSeekDown,
+    onvolumechange,
+    volume,
+    onPlayBackRateChange,
+    playBackRate,
+    onToggleFullScreen, 
+}) {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -110,7 +123,7 @@ export default function Player() {
         setAnchorEl(event.currentTarget);
     };
 
-    const handleClose = () => {
+    const handleClose = () => { 
         setAnchorEl(null);
     };
 
@@ -132,7 +145,7 @@ export default function Player() {
                         className={classes.bottomIcons}
                         style={{color: "white"}}
                       >
-                        <Typography>1X</Typography>
+                        <Typography>{playBackRate}</Typography>
                       </Button>
                       <Popover
                         id={id}
@@ -150,8 +163,8 @@ export default function Player() {
                       >
                         <Grid container direction="column reverse">
                           {[0.25, 0.5, 1, 1.5].map((rate) => (
-                          <Button varient="text">
-                            <Typography color="secondary">{rate}</Typography>
+                          <Button onClick={()=>onPlayBackRateChange(rate)} varient="text">
+                            <Typography color={rate === playBackRate ? "secondary" : "default"}>{rate}</Typography>
                           </Button>
                           ))}
                         </Grid>
@@ -166,21 +179,26 @@ export default function Player() {
                     aria-label = "reqind"
                     className={classes.controlIcons}
                   >
-                    <FastRewind fontSize="inherit"/>
+                    <FastRewind onClick = {onRewind} fontSize="inherit"/>
+                  </IconButton>
+
+                  <IconButton
+                    onClick={ onPlayPause }
+                    aria-label = "reqind"
+                    className={classes.controlIcons}
+                  >
+                    { 
+                        playing ?
+                        <Pause fontSize="inherit"/> :
+                        <PlayArrow fontSize="inherit"/>
+                    }
                   </IconButton>
 
                   <IconButton
                     aria-label = "reqind"
                     className={classes.controlIcons}
                   >
-                    <PlayArrow fontSize="inherit"/>
-                  </IconButton>
-
-                  <IconButton
-                    aria-label = "reqind"
-                    className={classes.controlIcons}
-                  >
-                    <FastForward fontSize="inherit"/>
+                    <FastForward onClick = {onFastForward} fontSize="inherit"/>
                   </IconButton>
                 </Grid>
 
@@ -201,15 +219,17 @@ export default function Player() {
                           <PlayArrow fontSize="medium"/>
                         </IconButton> */}
 
-                        <IconButton className={classes.bottomIcon}>
-                          <VolumeUp fontSize="medium"/>
+                        <IconButton onClick={onMute} className={classes.bottomIcon}>
+                          {muted ? <VolumeOff fontSize="medium"/>:<VolumeUp fontSize="medium"/>}
                         </IconButton>
 
                         <Slider 
                           min={0}
                           max={100}
-                          defaultValue={100}
+                          value={volume * 100}
                           className={classes.volumeSlider}
+                          onChange={onvolumechange}
+                          onChangeCommitted={onVolumeSeekDown}
                         />
 
                         <Button varient="text" style={{color:"#fff", marginLeft: 16}}>
@@ -220,6 +240,7 @@ export default function Player() {
                     <IconButton
                       className={classes.bottomIcons}
                       style={{color: "#fff"}}
+                      onClick={onToggleFullScreen}
                     >
                       <Fullscreen/>
                     </IconButton>
