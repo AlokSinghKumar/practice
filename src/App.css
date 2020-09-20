@@ -14,14 +14,12 @@
 
 .video__container{
     display: flex;
-    border: 2px solid salmon;
     flex: 0.75;
     padding: 10px;
     justify-content: space-between;
 }
 
 .video__container > div {
-    border: 1px solid bisque;
     flex: 0.4;
     height: 550px;
 }
@@ -48,4 +46,21 @@
     margin-top: 10%;
     border-radius: 20px;
     box-shadow: 5px 5px 10px rgb(91, 87, 115); 
+}
+
+.playBothVideo__button{
+    margin-left: 17%;
+    margin-top: 20px;
+    border-radius: 30px;
+    background-color: #7397FA;
+    transition: transform .3s;
+    border: none;
+    padding: 5px;
+    width: 50%;
+    height: 40px;
+    color: white;  
+}
+
+.playBothVideo__button:hover{
+    transform: scale(1.1);
 }
