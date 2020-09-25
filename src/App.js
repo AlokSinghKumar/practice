@@ -13,9 +13,26 @@ const useStyles = makeStyles({
   }, 
 });
 
+const format = (seconds) => {
+  if (isNaN(seconds)) {
+    return `00:00`;
+  }
+  const date = new Date(seconds * 1000);
+  const hh = date.getUTCHours();
+  const mm = date.getUTCMinutes();
+  const ss = date.getUTCSeconds().toString().padStart(2, "0");
+  if (hh) {
+    return `${hh}:${mm.toString().padStart(2, "0")}:${ss}`;
+  }
+  return `${mm}:${ss}`;
+};
+
+let count = 0;
+
 function App() {
   const classes = useStyles();
   const [videoFilePath, setVideoPath] = useState(null);
+  const [timeDisplayFormat, setTimeDisplayFormat] = React.useState("normal");
   const [state, setState] = useState({
     playingTrainer: false,
     playingTrainee: false, 
@@ -23,9 +40,11 @@ function App() {
     playBoth: false,
     volume: 0.5,
     playBackRate: 1.0,
+    played: 0,
+    seeking: false
   });
 
-  const {playingTrainer, playingTrainee, muted, playBoth, volume, playBackRate} = state;
+  const {playingTrainer, playingTrainee, played, muted, playBoth, volume, playBackRate, seeking} = state;
 
   const handleVideoUpload = (event) => {
     setVideoPath(URL.createObjectURL(event.target.files[0]));
@@ -34,6 +53,7 @@ function App() {
   const trainerRef = useRef(null);
   const traineeRef = useRef(null);
   const playerContainerRef = useRef(null);
+  const trainerControlsRef = useRef(null);
 
   /*******************************************/
   //  For playing trainer and trainee video
@@ -90,13 +110,14 @@ function App() {
     });
  };
 
- const handleVolumeSeekDown = (e, newValue) => {
+ const handleVolumeSeekUp = (e, newValue) => {
   setState({
     ...state,
     volume: parseFloat(newValue / 100),
     muted: newValue === 0 ? true : false,
   });
  }
+
 
 /*******************************************/
 //            FOR PLAYBACK
@@ -106,10 +127,70 @@ const handlePlayBackRateChange = (rate) => {
 }
 
 /*******************************************/
-//            FOR PLAYBACK
+//            FOR FULLSCREEN
 /*******************************************/
 const toggleFullScreen = () => {
   screenfull.toggle(playerContainerRef.current);
+}
+
+/*******************************************/
+//         FOR Progress slider
+/*******************************************/
+const handleProgress = (changeState) => {
+  if (count > 1) {
+    trainerControlsRef.current.style.visibility = "hidden";
+    count = 0;
+  }
+  if (trainerControlsRef.current.style.visibility === "visible") {
+    count += 1;
+  }
+  if (!state.seeking) {
+    setState({ ...state, ...changeState });
+  }
+};
+
+const handleSeekChange = (e, newValue) => {
+  console.log({ newValue });
+  setState({ ...state, played: parseFloat(newValue / 100) });
+};
+
+const handleSeekMouseDown = (e) => {
+  setState({ ...state, seeking: true });
+};
+
+const handleSeekMouseUp = (e, newValue) => {
+  console.log({ value: e.target });
+  setState({ ...state, seeking: false });
+
+  trainerRef.current.seekTo(newValue / 100, "fraction");
+};
+
+/*******************************************/
+//                FOR Timer
+/*******************************************/
+const currentTime = trainerRef && trainerRef.current ? trainerRef.current.getCurrentTime() : "00:00";
+const duration = trainerRef && trainerRef.current ? trainerRef.current.getDuration() : "00:00";
+
+const elapsedTime =
+timeDisplayFormat === "normal"
+  ? format(currentTime)
+  : `-${format(duration - currentTime)}`;
+  
+const totalDuration = format(duration);
+
+const handleChangeDisplayFormat = () => {
+  setTimeDisplayFormat(timeDisplayFormat === 'normal' ? 'remaining' : 'normal');
+}
+
+
+// const hanldeMouseLeave = () => {
+//   trainerRef.current.style.visibility = "hidden";
+//   count = 0;
+// };
+
+const handleMouseMove = () => {
+  trainerControlsRef.current.style.visibility = "visible";
+  count = 0;
 }
 
   return (
@@ -119,7 +200,11 @@ const toggleFullScreen = () => {
       </div>
       <div className="main__container">
         <div className="video__container">
-          <div ref={playerContainerRef}  className={classes.playerWrapper}>
+          <div 
+            ref={playerContainerRef}  
+            className={classes.playerWrapper}
+            onMouseMove = {handleMouseMove}
+          >
             <ReactPlayer 
                 ref={trainerRef}
                 url={myVideo}
@@ -129,9 +214,11 @@ const toggleFullScreen = () => {
                 muted={muted}
                 volume={volume}
                 playbackRate = {playBackRate}
+                onProgress={handleProgress}
             />
             
             <Player 
+              ref = {trainerControlsRef}
               onPlayPause={handlePlayTrainer}
               playing = {playingTrainer}
               onRewind={handleRewindTrainer}
@@ -139,11 +226,18 @@ const toggleFullScreen = () => {
               muted={muted}
               onMute={handleMute}
               onVolumeChange={handleVolumeChange}
-              onVolumeSeekDown={handleVolumeSeekDown}
+              onVolumeSeekUp={handleVolumeSeekUp}
               volume={volume}
               playBackRate={playBackRate}
               onPlayBackRateChange = {handlePlayBackRateChange}
               onToggleFullScreen = {toggleFullScreen}
+              played={played}
+              onSeek={handleSeekChange}
+              onSeekMouseDown={handleSeekMouseDown}
+              onSeekMouseUp={handleSeekMouseUp}
+              elaspedTime={elapsedTime}
+              totalDuration={totalDuration}
+              onChangeDisplayFormat={handleChangeDisplayFormat}
             />
           </div>
           
@@ -181,3 +275,5 @@ const toggleFullScreen = () => {
 }
 
 export default App;
+
+// https://www.youtube.com/watch?v=Y-OLcnr8eNo - 26.52

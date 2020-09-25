@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {forwardRef} from 'react'
 import { makeStyles } from "@material-ui/core/styles";
 import { 
   Button, 
@@ -102,20 +102,27 @@ const useStyles = makeStyles({
   })(Slider);
   
 
-export default function Player({ 
+export default forwardRef(({ 
     onPlayPause, 
     playing, 
     onRewind, 
     onFastForward,
     muted, 
     onMute,
-    onVolumeSeekDown,
+    onVolumeSeekUp,
     onvolumechange,
     volume,
     onPlayBackRateChange,
     playBackRate,
     onToggleFullScreen, 
-}) {
+    played,
+    onSeek,
+    onSeekMouseDown,
+    onSeekMouseUp,
+    elaspedTime,
+    totalDuration,
+    onChangeDisplayFormat
+}, ref) => {
     const classes = useStyles();
     const [anchorEl, setAnchorEl] = React.useState(null);
 
@@ -132,7 +139,7 @@ export default function Player({
 
 
     return (
-            <div className={classes.controlsWrapper}>
+            <div className={classes.controlsWrapper} ref={ref}>
               {/* top controls */}
                 <Grid container direction="row" alignItems="center" justify="space-between" style={{padding: 16}}>
                     <Grid item>
@@ -208,8 +215,11 @@ export default function Player({
                     <PrettoSlider 
                       min = {0}
                       max={100}
-                      defaultValue={20}
-                      ValueLabelComponent={ValueLabelComponent}
+                      value={played * 100}
+                      ValueLabelComponent={(props) => <ValueLabelComponent {...props} value={elaspedTime}/>}
+                      onChange={onSeek}
+                      onMouseDown={onSeekMouseDown}
+                      onChangeCommitted={onSeekMouseUp}
                     />
                   </Grid>
 
@@ -229,11 +239,11 @@ export default function Player({
                           value={volume * 100}
                           className={classes.volumeSlider}
                           onChange={onvolumechange}
-                          onChangeCommitted={onVolumeSeekDown}
+                          onChangeCommitted={onVolumeSeekUp}
                         />
 
-                        <Button varient="text" style={{color:"#fff", marginLeft: 16}}>
-                          <Typography>05:05</Typography>
+                        <Button onClick = {onChangeDisplayFormat} varient="text" style={{color:"#fff", marginLeft: 16}}>
+                          <Typography>{elaspedTime}/{totalDuration}</Typography>
                         </Button>
                       </Grid>
                     </Grid>
@@ -247,4 +257,4 @@ export default function Player({
                 </Grid>
             </div>
     )
-}
+})
