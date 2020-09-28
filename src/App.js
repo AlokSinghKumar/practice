@@ -1,10 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import './App.css';
 import ReactPlayer from 'react-player';
 import myVideo from "./video_file/1.mp4";
 import { makeStyles } from "@material-ui/core/styles";
 import Player from './customPlayer/Player';
 import screenfull from "screenfull";
+import Webcam from "react-webcam";
+import { AirlineSeatReclineExtraRounded } from '@material-ui/icons';
+
 
 const useStyles = makeStyles({
   playerWrapper: {
@@ -32,7 +35,12 @@ let count = 0;
 function App() {
   const classes = useStyles();
   const [videoFilePath, setVideoPath] = useState(null);
-  const [timeDisplayFormat, setTimeDisplayFormat] = React.useState("normal");
+  const [timeDisplayFormat, setTimeDisplayFormat] = useState("normal");
+  const [capturing, setCapturing] = useState(false);
+  const [recordedChunks, setRecordedChunks] = useState([]);
+
+  const [recording, setRecording] = useState(false);
+
   const [state, setState] = useState({
     playingTrainer: false,
     playingTrainee: false, 
@@ -54,6 +62,8 @@ function App() {
   const traineeRef = useRef(null);
   const playerContainerRef = useRef(null);
   const trainerControlsRef = useRef(null);
+  const webcamRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
 
   /*******************************************/
   //  For playing trainer and trainee video
@@ -193,17 +203,79 @@ const handleMouseMove = () => {
   count = 0;
 }
 
+
+/*******************************************/
+//            FOR recording
+/*******************************************/
+const  toggleRecording = () => {
+  if(recording === true){
+    setRecording(false);
+  }
+  else{
+    setRecording(true);
+  }
+}
+
+
+  const handelStartCaptureClick = useCallback(() => {
+    setCapturing(true);
+    mediaRecorderRef.current = new MediaRecorder(webcamRef.current.stream, {
+      mimeType: "video/webm"
+    });
+    mediaRecorderRef.current.addEventListener(
+      "dataavailable",
+      handleDataAvailable
+    );
+    mediaRecorderRef.current.start();
+  }, [webcamRef, setCapturing, mediaRecorderRef]);
+
+  const handleDataAvailable = useCallback(
+    ({data}) => {
+      if(data.size > 0){
+        setRecordedChunks( (prev) => prev.concat(data));
+      }
+    },
+    [setRecordedChunks]
+  );
+
+  const handleStopCaptureClick = useCallback( () => {
+    mediaRecorderRef.current.stop();
+    setCapturing(false);
+  }, [mediaRecorderRef, webcamRef, setCapturing]);
+
+  const handleDownload = useCallback(() => {
+    if(recordedChunks.length) { 
+      const blob = new Blob(recordedChunks, {
+        type: "video/webm"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      document.body.appendChild(a);
+      a.style = "display: none";
+      a.href = url;
+      a.download = url;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      setRecordedChunks([]);
+    }
+  }, [recordedChunks])
+
   return (
     <div className="body">
       <div className="upload">
         <input type="file" name="video" class="video__upload" onChange={handleVideoUpload}/>
+        <button id = "record" onClick = {handelStartCaptureClick}>startRecording</button>
+        <button id = "StopRecord" onClick = {handleStopCaptureClick}>stopRecording</button>
+        <button onClick={handleDownload}>Download</button>
       </div>
+      
       <div className="main__container">
         <div className="video__container">
           <div 
             ref={playerContainerRef}  
             className={classes.playerWrapper}
-            onMouseMove = {handleMouseMove}
+            onMouseMove = {"handleMouseMove"}
           >
             <ReactPlayer 
                 ref={trainerRef}
@@ -242,20 +314,28 @@ const handleMouseMove = () => {
           </div>
           
           <div className={classes.playerWrapper}>
-          <ReactPlayer 
+            <accessWebCam />
+            <Webcam
+                ref={webcamRef}
+                audio={false}
+                mirrored = {true}
+                height= {100 + '%'}
+                width={100 + '%'}
+            />
+          {/* <ReactPlayer 
                 ref={traineeRef}
                 url={videoFilePath} 
                 height='100%'
                 width='100%'
                 playing = {playingTrainee}
-                // volume='0'
-          />
-            <Player 
+                volume='0'
+          /> */}
+            {/* <Player 
               onPlayPause={handlePlayTrainee}
               playing = {playingTrainee}
               onRewind={handleRewindTrainee}
               onFastForward = {handleFastForwardTrainee}
-            />
+            /> */}
 
           </div>
         </div>
