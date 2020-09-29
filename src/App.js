@@ -38,6 +38,7 @@ function App() {
   const [timeDisplayFormat, setTimeDisplayFormat] = useState("normal");
   const [capturing, setCapturing] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState([]);
+  const [imgSrc, setImgSrc] = React.useState(null);
 
   const [recording, setRecording] = useState(false);
 
@@ -203,6 +204,7 @@ const handleMouseMove = () => {
   count = 0;
 }
 
+/**************************************************************************************************************** */
 
 /*******************************************/
 //            FOR recording
@@ -216,9 +218,15 @@ const  toggleRecording = () => {
   }
 }
 
-
+var fps = 0;
   const handelStartCaptureClick = useCallback(() => {
+    console.log("recording has been started");    
     setCapturing(true);
+
+     fps = setInterval(() => {
+      console.log("capturing => ", capturing);
+    }, 2000)  
+
     mediaRecorderRef.current = new MediaRecorder(webcamRef.current.stream, {
       mimeType: "video/webm"
     });
@@ -232,6 +240,8 @@ const  toggleRecording = () => {
   const handleDataAvailable = useCallback(
     ({data}) => {
       if(data.size > 0){
+        console.log("data -> ", data);
+        console.log("chunks -> ", recordedChunks);
         setRecordedChunks( (prev) => prev.concat(data));
       }
     },
@@ -239,8 +249,10 @@ const  toggleRecording = () => {
   );
 
   const handleStopCaptureClick = useCallback( () => {
-    mediaRecorderRef.current.stop();
     setCapturing(false);
+    clearInterval(fps);
+    console.log("video stop handler has been called");
+    mediaRecorderRef.current.stop();
   }, [mediaRecorderRef, webcamRef, setCapturing]);
 
   const handleDownload = useCallback(() => {
@@ -261,6 +273,12 @@ const  toggleRecording = () => {
     }
   }, [recordedChunks])
 
+  const capture = React.useCallback(() => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    setImgSrc(imageSrc);
+    console.log("this is the capture -> ", imageSrc);
+  }, [webcamRef, setImgSrc]);
+
   return (
     <div className="body">
       <div className="upload">
@@ -275,7 +293,7 @@ const  toggleRecording = () => {
           <div 
             ref={playerContainerRef}  
             className={classes.playerWrapper}
-            onMouseMove = {"handleMouseMove"}
+            // onMouseMove = {"handleMouseMove"}
           >
             <ReactPlayer 
                 ref={trainerRef}
