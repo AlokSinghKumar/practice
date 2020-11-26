@@ -6,7 +6,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import Player from './customPlayer/Player';
 import screenfull from "screenfull";
 import Webcam from "react-webcam";
-import { AirlineSeatReclineExtraRounded } from '@material-ui/icons';
+import captureVideoFrame from "capture-video-frame";
+import sketch from "./CVDance/sketchimage"
+import P5Wrapper from 'react-p5-wrapper';
 
 
 const useStyles = makeStyles({
@@ -38,9 +40,11 @@ function App() {
   const [timeDisplayFormat, setTimeDisplayFormat] = useState("normal");
   const [capturing, setCapturing] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState([]);
-  const [imgSrc, setImgSrc] = React.useState(null);
-
+  const [tranieeImgSrc, setTranieeImgSrc] = useState(null);
+  const [trainerImgSrc, setTrainerImgSrc] = useState(null);
   const [recording, setRecording] = useState(false);
+  
+  const [defaultWebCam, setDefaultWebCam] = useState(false);
 
   const [state, setState] = useState({
     playingTrainer: false,
@@ -194,10 +198,10 @@ const handleChangeDisplayFormat = () => {
 }
 
 
-// const hanldeMouseLeave = () => {
-//   trainerRef.current.style.visibility = "hidden";
-//   count = 0;
-// };
+const hanldeMouseLeave = () => {
+  trainerControlsRef.current.style.visibility = "hidden";
+  count = 0;
+};
 
 const handleMouseMove = () => {
   trainerControlsRef.current.style.visibility = "visible";
@@ -209,14 +213,6 @@ const handleMouseMove = () => {
 /*******************************************/
 //            FOR recording
 /*******************************************/
-const  toggleRecording = () => {
-  if(recording === true){
-    setRecording(false);
-  }
-  else{
-    setRecording(true);
-  }
-}
 
 var fps = 0;
   const handelStartCaptureClick = useCallback(() => {
@@ -224,8 +220,10 @@ var fps = 0;
     setCapturing(true);
 
      fps = setInterval(() => {
-      console.log("capturing => ", capturing);
-    }, 2000)  
+      // console.log("capturing => ", capturing);
+      Tranieecapture();
+      TrainerCapture();
+    }, 1000)  
 
     mediaRecorderRef.current = new MediaRecorder(webcamRef.current.stream, {
       mimeType: "video/webm"
@@ -273,28 +271,43 @@ var fps = 0;
     }
   }, [recordedChunks])
 
-  const capture = React.useCallback(() => {
+
+/*******************************************/
+//            FOR Frame capture
+/*******************************************/
+  const Tranieecapture = React.useCallback(() => {
     const imageSrc = webcamRef.current.getScreenshot();
-    setImgSrc(imageSrc);
-    console.log("this is the capture -> ", imageSrc);
-  }, [webcamRef, setImgSrc]);
+    setTranieeImgSrc(imageSrc);
+    console.log("This is the traniee capture -> ", imageSrc);
+  }, [webcamRef, setTranieeImgSrc]);
+
+  const TrainerCapture = React.useCallback( () => {
+    const imageSrc = captureVideoFrame(trainerRef.current.getInternalPlayer(), "png", 1);
+    setTrainerImgSrc(imageSrc);
+
+    console.log("This is the trainer capture -> ", imageSrc);
+  }, [trainerRef, setTrainerImgSrc]);
 
   return (
     <div className="body">
       <div className="upload">
-        <input type="file" name="video" class="video__upload" onChange={handleVideoUpload}/>
+        <input type="file" name="video" className="video__upload" onChange={handleVideoUpload}/>
         <button id = "record" onClick = {handelStartCaptureClick}>startRecording</button>
         <button id = "StopRecord" onClick = {handleStopCaptureClick}>stopRecording</button>
         <button onClick={handleDownload}>Download</button>
+        
       </div>
       
       <div className="main__container">
         <div className="video__container">
+       
           <div 
             ref={playerContainerRef}  
             className={classes.playerWrapper}
-            // onMouseMove = {"handleMouseMove"}
+            onMouseMove = {handleMouseMove}
+            onMouseLeave ={hanldeMouseLeave}
           >
+            
             <ReactPlayer 
                 ref={trainerRef}
                 url={myVideo}
@@ -332,6 +345,8 @@ var fps = 0;
           </div>
           
           <div className={classes.playerWrapper}>
+
+
             <accessWebCam />
             <Webcam
                 ref={webcamRef}
@@ -340,6 +355,8 @@ var fps = 0;
                 height= {100 + '%'}
                 width={100 + '%'}
             />
+            
+            
           {/* <ReactPlayer 
                 ref={traineeRef}
                 url={videoFilePath} 
@@ -368,10 +385,10 @@ var fps = 0;
         </div>
       </div>
       <button class = "playBothVideo__button" onClick={playBothVideo}><b>Play Both</b></button>
+      <P5Wrapper class = "P5Wrapper" sketch={sketch}/>
+
     </div>
   );
 }
 
 export default App;
-
-// https://www.youtube.com/watch?v=Y-OLcnr8eNo - 26.52

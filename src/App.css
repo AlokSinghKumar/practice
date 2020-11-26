@@ -64,3 +64,9 @@
 .playBothVideo__button:hover{
     transform: scale(1.1);
 }
+
+.P5Wrapper{
+    visibility: hidden;
+    margin: 0px;
+    padding: 0px;
+}
